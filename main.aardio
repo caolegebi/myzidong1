@@ -1,0 +1,204 @@
+import win.ui;
+/*DSG{{*/
+mainForm = win.form(text="siteDownload";right=1259;bottom=969;border="none";mode="popup")
+mainForm.add(
+downloadButton={cls="button";text="下载列表";left=516;top=16;right=587;bottom=44;z=2};
+hint={cls="static";left=37;top=19;right=318;bottom=42;notify=1;transparent=1;z=5};
+listbox={cls="listbox";left=33;top=55;right=988;bottom=123;edge=1;items={};vscroll=1;z=3};
+urlButton={cls="button";text="提取链接列表";left=387;top=16;right=472;bottom=42;z=1};
+webHost={cls="edit";text="edit";left=2;top=128;right=1265;bottom=996;edge=1;multiline=1;z=4}
+)
+/*}}*/
+
+import web.blink.portable;//生成独立EXE
+import web.blink.jsFunction;//可选预定义全局JS函数
+import web.blink.form;//导入miniblink组件
+var mb = web.blink.form(mainForm.webHost);
+
+import wsock.tcp.simpleHttpServer;
+//wsock.tcp.simpleHttpServer.startUrl("/html/main.aardio")
+mainForm.hint.text = "页面加载中，请稍候";
+mb.go( "https://www.liaoxuefeng.com/wiki/001434446689867b27157e896e74d51a89c25cc8b43bdb3000");
+
+mb.onDocumentReady = function(isMainFrame,hFrame){
+	mainForm.hint.text = "页面加载完毕，可以进一步处理";
+}
+
+//导出网页js脚本可以直接调用的external对象
+mb.external = {
+    hitCaption = function(){
+        mainForm.hitCaption();
+    };
+    hitmax = function(){
+    	return mainForm.hitmax()
+    };
+    hitmin = function(){
+    	mainForm.hitmin()
+    };
+    close = function(){
+        mainForm.close();
+    };
+   
+
+    
+    updateItem = function(str,link){
+       
+       whole = str+ "**https://www.liaoxuefeng.com" +link;
+       mainForm.listbox.add(whole,1);
+            
+    };
+    
+    aardioCall = function(str){
+        mainForm.msgbox(str);
+    };
+}
+
+//打开链接时触发该事件
+mb.onNavigation = function(url,navigationType){
+	if( navigationType == 0/*_WKE_NAVIGATION_TYPE_LINKCLICK*/ ){
+	
+	}
+	return true;
+}
+
+
+//可以使用CSS选择器获取HTML节点对象
+
+
+
+
+mainForm.urlButton.oncommand = function(id,event){
+   mb.doScript(`
+   
+  var links = $('#x-wiki-index a');
+  for(var i=0;i<links.length;i++){
+ 
+       var item = $(links[i]).text();
+       var link = $(links[i]).attr("href");
+       link = link.replace("20%","");
+       external.updateItem(item,link);
+      // external.downloadItem(item,link);
+       
+     
+       
+  }
+
+
+`);
+}
+
+import py;
+/*import console;
+requests1 = py.import("requests");
+console.log("hix");
+ss = requests1.get("https://www.liaoxuefeng.com/wiki/001434446689867b27157e896e74d51a89c25cc8b43bdb3000/0014345015296018cac40c198b543fead5c549865b9bd4a000",verify=False);
+console.log(ss.text);
+*/
+
+
+
+py.releaseThread();
+
+pyThread = function(urls){
+    import py; 
+    import console;
+    
+    /*
+    要点3、启用GIL以后，任何python调用都必须在py.lock里执行
+    python并不支持真正的多线程,所有调用都要加锁互斥运行。
+    */
+    
+      
+    py.lock(
+        function(){
+            //console.log("sss" );
+            var requests= py.import("requests");
+            
+            var i = 0;
+            for(key,val in urls){
+             
+             if(i<1){
+             
+                   var urls2 = string.split(val,"<**>");
+                   var url = urls2[2];
+                   console.log(url);
+              
+              headers = {
+    'User-Agent':'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36'
+}
+              url = "https://github.com/";
+              
+              
+              //这里因为访问的是https，导致无法爬取，需要证书，哎，，很麻烦。
+              //慢慢解决，现在只适合http网页
+              var page = requests.get(url,verify=False);
+              var content = page.text;
+            //  console.log(content);
+              whole = tostring(content);
+              whole ="content:"+ string.sub(whole,1,100);
+              
+              console.log(val);
+              console.log(whole); 
+              /*thread.invoke(function(val, whole){
+                console.log(val);
+              	console.log(whole ); 
+              },val,whole);
+              */
+             
+             
+             }
+             i++;
+              
+              
+            }
+            
+            
+            
+                            
+        }
+    ) 
+    
+    //py.releaseThread();
+}
+mainForm.downloadButton.oncommand = function(id,event){
+
+ 
+   
+   items = mainForm.listbox.items;
+   
+ 
+   thread.invoke( pyThread,items );
+   
+   
+   
+
+}
+
+
+
+
+//添加可拖动边框
+import win.ui.resizeBorder;
+win.ui.resizeBorder(mainForm);
+
+//添加阴影
+import win.ui.shadow;
+win.ui.shadow(mainForm);
+
+//限定最大化范围
+
+mainForm.webHost.oncommand = function(id,event){
+	
+}
+
+mainForm.hint.oncommand = function(id,event){
+	
+}
+
+import win.ui.minmax;
+win.ui.minmax(mainForm);
+
+mainForm.show();
+win.loopMessage();
+
+mb.wait(); //等待页面完全打开

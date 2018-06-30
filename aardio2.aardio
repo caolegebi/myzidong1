@@ -1,0 +1,71 @@
+import win.ui;
+/*DSG{{*/
+var winform = win.form(text="aardio form";right=1163;bottom=753)
+winform.add(
+button={cls="button";text="button";left=876;top=663;right=1102;bottom=723;z=2};
+edit={cls="edit";left=11;top=16;right=1140;bottom=625;edge=1;multiline=1;z=1}
+)
+/*}}*/
+
+/*
+要点1、一定要在主线程导入python库
+主线程会负责创建python虚拟机，主线程退出不能再在任何线程调用python.
+*/
+import py2;
+
+/*
+要点2、一定要在主线程释放GIL，之后任何python调用都在在py.lock里执行
+注意，只有你确实要在多个线程并发调用python时，才需要使用GIL。
+*/
+py2.releaseThread();
+
+pyThread = function(winform,urls){
+    import py2; 
+    import console;
+    
+    /*
+    要点3、启用GIL以后，任何python调用都必须在py.lock里执行
+    python并不支持真正的多线程,所有调用都要加锁互斥运行。
+    */
+    
+      
+    py2.lock(
+        function(){
+            winform.edit.print(thread.getId(), "sss" );
+            var requests= py2.import("requests");
+            
+            for(key,val in urls){
+            
+              var page = requests.get(val,"verify=False");
+              var content = page.text;
+              console.log(content);
+              whole = tostring(content);
+              whole = string.sub(whole,1,100);
+              
+              thread.invoke(function(winform,val, whole){
+              	winform.edit.print(thread.getId(),val,whole ); 
+              },winform,val,whole);
+              
+              
+            }
+            
+            
+            
+                            
+        }
+    ) 
+    
+    //py.releaseThread();
+}
+
+
+winform.button.oncommand = function(id,event){
+   
+    urls = {"https://www.github.com";"http://www.sina.com";"http://www.ifeng.com"};
+    //for(i=1;1;1){
+        thread.invoke( pyThread,winform,urls )  
+    //}
+}
+
+winform.show() 
+win.loopMessage();

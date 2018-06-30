@@ -1,0 +1,74 @@
+import win.ui;
+/*DSG{{*/
+var winform = win.form(text="后台线程调用miniblink";right=1123;bottom=570)
+winform.add( 
+	button = { 
+		cls="button";bottom=164;right=147;left=8;top=123;z=1;text="自定义ID控件";id=123;autoResize=false;
+	}; 
+)
+/*}}*/
+
+import web.blink.form;  
+var mb = web.blink.form(winform);
+
+winform.insertHtml = function(html){
+    mb.document.body.insertAdjacentHTML("beforeEnd",html)
+}
+
+winform.loadUrl = function(url){
+    mb.go(url);
+}
+
+winform.button.oncommand = function(id,event){
+
+
+var urls = "";
+for(i=6;200;1){
+
+        
+           urls = urls +"http://bbs.aardio.com/home.php?mod=space&uid="+i+"&do=profile$";
+  }
+  
+  string.save("C:\data2.txt",urls);
+
+
+  
+//在第一个线程里进入第一个空间页面
+thread.invoke( 
+    function(winform,i){
+        //winform.insertHtml("线程ID：" + thread.getId() + "<br>" );
+        var url = "http://bbs.aardio.com/home.php?mod=space&uid=5&do=profile";
+        winform.loadUrl(url);
+        
+        
+        //线程里继续打开多个线程，用来连续访问多个页面，这里的测试选定在200
+        for(i=6;200;1){
+
+        sleep(1000)
+        thread.invoke( 
+          function(winform,i){
+           //winform.insertHtml("线程ID：" + thread.getId() + "<br>" );
+            var url = "http://bbs.aardio.com/home.php?mod=space&uid="+i+"&do=profile";
+           winform.loadUrl(url);
+        },winform,i
+        )
+
+   
+
+   }
+        
+             
+    },winform,5
+)
+//后台线程1
+
+
+}
+winform.evalJs = function(js){
+    return mb.eval(js)
+}
+
+
+
+winform.show() 
+win.loopMessage();
