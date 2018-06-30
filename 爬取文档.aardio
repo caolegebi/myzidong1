@@ -35,9 +35,17 @@ winform.hint.text = "页面加载中，请稍候";
 winform.items = {};
 mb.go( "https://www.liaoxuefeng.com/wiki/001434446689867b27157e896e74d51a89c25cc8b43bdb3000");
 
-
+winform.linksReady =false;
 mb.onDocumentReady = function(isMainFrame,hFrame){
 	winform.hint.text = "页面加载完毕，可以进一步处理";
+	var js = `
+	 var block = $("div[class='x-wiki-content x-main-content']");
+	 $("body").html(block);
+	
+	
+	`
+	if(winform.linksReady)
+	 mb.doScript(js);
 }
 
 
@@ -78,6 +86,8 @@ mb.external = {
      
       //下面出现了死循环       
       winform.msgbox("what you want")
+      
+      winform.linksReady = true;
     };
     
     aardioCall = function(str){
@@ -131,7 +141,7 @@ winform.downloadButton.oncommand = function(id,event){
                     
                     
                     
-                     sleep(1000)
+                     sleep(12000)
                     
                  
                      thread.invoke( 
