@@ -33,20 +33,81 @@ winform.evalJs = function(js){
 
 winform.hint.text = "页面加载中，请稍候";
 winform.items = {};
-mb.go( "https://www.liaoxuefeng.com/wiki/001434446689867b27157e896e74d51a89c25cc8b43bdb3000");
+mb.go( "https://www.liaoxuefeng.com/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000");
 
 winform.linksReady =false;
+
+winform.firstPage = false;
 mb.onDocumentReady = function(isMainFrame,hFrame){
 	winform.hint.text = "页面加载完毕，可以进一步处理";
-	var js = `
+	
+	import console;
+	tm = time();
+    n = tonumber(tm);
+    
+    //由于每次页面加载，会异步加载很多js,css,img资源，调用多次，多次调用脚本 会导致崩溃，所以只在
+    //初次加载资源时菜执行脚本，下载页面
+    if(winform.firstPage){
+        
+    if(winform.now==0){
+      winform.now = n;
+      console.log("first set");
+      var js = `
 	 var block = $("div[class='x-wiki-content x-main-content']");
-	 $("body").html(block);
-	
-	
+	 $("body").html(block);		 
 	`
-	if(winform.linksReady)
-	 mb.doScript(js);
+	var js2 = `
+	 var body = $("body").html();
+	 var head = $("head").html();
+	 var data = "<html><head>"+head+"</head><body>"+body+"</body></html>";
+	 var title = $("title").text();
+	 var name = title+".html";
+	 external.writeHtml(name,data);
+	 	 
+	`
+	  if(winform.linksReady){
+	    mb.doScript(js);
+	 
+	    sleep(3000);
+	   mb.doScript(js2);
+	   }
+    }
+    else if(n-winform.now>0&&n-winform.now<1){
+	 console.log(n)
+	 winform.now = n;
+	 
+	 
+	 
+	 /*
+	 var js = `
+	 var block = $("div[class='x-wiki-content x-main-content']");
+	 $("body").html(block);		 
+	`
+	var js2 = `
+	 var body = $("body").html();
+	 var head = $("head").html();
+	 var data = "<html><head>"+head+"</head><body>"+body+"</body></html>";
+	 var title = $("title").text();
+	 var name = title+".html";
+	 external.writeHtml(name,data);
+	 	 
+	`
+	  if(winform.linksReady){
+	    mb.doScript(js);
+	 
+	    sleep(3000);
+	   mb.doScript(js2);
+	   }
+	 
+	 */
+	 
+	}
+
+	}
+	
 }
+
+  
 
 
 //导出网页js脚本可以直接调用的external对象
@@ -64,6 +125,12 @@ mb.external = {
         winform.close();
     };
    
+    writeHtml = function(name,str){
+       
+       import console;
+       console.log(str);
+       string.save(name,str);
+    }
 
     
     updateItem = function(names,urls){
@@ -124,6 +191,7 @@ winform.urlButton.oncommand = function(id,event){
 
 winform.downloadButton.oncommand = function(id,event){
  
+   winform.firstPage = true;
    //在第一个线程里进入第一个空间页面
     thread.invoke( 
            function(winform){
@@ -141,7 +209,7 @@ winform.downloadButton.oncommand = function(id,event){
                     
                     
                     
-                     sleep(12000)
+                     sleep(15000)
                     
                  
                      thread.invoke( 
@@ -149,6 +217,7 @@ winform.downloadButton.oncommand = function(id,event){
                     		
                     		import console;
                     		console.log(val);
+                    		winform.now = 0;
                     		winform.loadUrl(val);
                     	},winform,val);
                    
@@ -156,7 +225,7 @@ winform.downloadButton.oncommand = function(id,event){
                   }
                   
                   
-                  sleep(50000)
+                 
                        
                 
              
