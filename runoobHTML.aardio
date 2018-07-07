@@ -1,0 +1,242 @@
+import win.ui;
+/*DSG{{*/
+winform = win.form(text="siteDownload";right=1259;bottom=969;border="none";mode="popup")
+winform.add(
+downloadButton={cls="button";text="下载列表";left=516;top=16;right=587;bottom=44;z=2};
+hint={cls="static";left=37;top=19;right=318;bottom=42;notify=1;transparent=1;z=5};
+listbox={cls="listbox";left=33;top=55;right=988;bottom=123;edge=1;items={};vscroll=1;z=3};
+urlButton={cls="button";text="提取链接列表";left=387;top=16;right=472;bottom=42;z=1};
+webHost={cls="edit";text="edit";left=2;top=128;right=1265;bottom=996;edge=1;multiline=1;z=4}
+)
+/*}}*/
+
+import web.blink.portable;//生成独立EXE
+//import web.blink.jsFunction;//可选预定义全局JS函数
+import web.blink.form;//导入miniblink组件
+var mb = web.blink.form(winform.webHost);
+
+winform.insertHtml = function(html){
+    mb.document.body.insertAdjacentHTML("beforeEnd",html)
+}
+
+winform.loadUrl = function(url){
+    
+      
+    mb.go(url);
+    mb.waitDoc();
+    return true;
+}
+
+
+winform.evalJs = function(js){
+    return mb.eval(js)
+}
+
+
+winform.hint.text = "页面加载中，请稍候";
+winform.items = {};
+mb.go( "http://www.runoob.com/html/html-tutorial.html");
+
+winform.linksReady =false;
+
+winform.firstPage = false;
+mb.onDocumentReady = function(isMainFrame,hFrame){
+	winform.hint.text = "页面加载完毕，可以进一步处理";
+	
+	import console;
+	tm = time();
+    n = tonumber(tm);
+    
+    //由于每次页面加载，会异步加载很多js,css,img资源，调用多次，多次调用脚本 会导致崩溃，所以只在
+    //初次加载资源时菜执行脚本，下载页面
+    if(winform.firstPage){
+       
+    if(winform.now==0){
+      winform.now = n;
+      console.log("first set");
+       
+     // winform.msgbox("hii")
+      var js = `
+	 var block = $("div[class='article-body']");
+	 $("body").html(block);		 
+	`
+	var js2 = `
+	 var title = $("meta[name='keywords']").attr("content");
+	 var body = $("body").html();
+	 var head = $("head").html();
+	 var data = "<html><head>"+head+"</head><body>"+body+"</body></html>";
+	
+	 var name = title+".html";
+	
+	 external.writeHtml(name,data);
+	 	 
+	`
+	  if(winform.linksReady){
+	    mb.doScript(js);
+	 
+	    sleep(1000);
+	   mb.doScript(js2);
+	   }
+    }
+    else if(n-winform.now>0&&n-winform.now<1){
+	 console.log(n)
+	 winform.now = n;
+	 
+
+	}
+
+	}
+	
+}
+
+  
+
+
+//导出网页js脚本可以直接调用的external对象
+mb.external = {
+    hitCaption = function(){
+        winform.hitCaption();
+    };
+    hitmax = function(){
+    	return winform.hitmax()
+    };
+    hitmin = function(){
+    	winform.hitmin()
+    };
+    close = function(){
+        winform.close();
+    };
+   
+    writeHtml = function(name,str){
+       
+       import console;
+       console.log(str);
+     
+       console.log("writeFile:"+name);
+      
+      string.save(name,str);
+    }
+
+    
+    updateItem = function(names,urls){
+       /*
+       whole = str+ "**https://www.liaoxuefeng.com" +link;
+       winform.listbox.add(whole,1);
+            */
+       nameArr = string.split(names,"<$>");
+       urlArr = string.split(urls,"<$>");
+       
+       urls = "";
+       head = "http://www.runoob.com";
+       for(key,val in nameArr){
+       
+            whole = val+ "**" + urlArr[key];
+            if(string.find(urlArr[key],head))
+            urls = urls + "" +urlArr[key]+"$";
+            else if(string.sub(urlArr[key],1,1)=="/")
+            urls = urls + head +urlArr[key]+"$";
+            else urls = urls + head +"/"+urlArr[key]+"$";
+            winform.listbox.add(whole,1);
+       }
+       
+       string.save("~\data.txt",urls);
+     
+      //下面出现了死循环       
+      winform.msgbox("what you want")
+      
+      winform.linksReady = true;
+    };
+    
+    aardioCall = function(str){
+        mwinform.msgbox(str);
+    };
+}
+
+
+winform.urlButton.oncommand = function(id,event){
+   mb.doScript(`
+   
+  var links = $('#leftcolumn a');
+  
+  var names = "";
+  var urls = ""
+  for(var i=0;i<links.length;i++){
+ 
+       var item = $(links[i]).text();
+       var link = $(links[i]).attr("href");
+       link = link.replace("20%","");
+       names = names + item+"$";
+      // external.downloadItem(item,link);
+       urls = urls + link + "$";
+     
+       
+  }
+  
+   external.updateItem(names,urls);
+
+
+`);
+}
+
+
+winform.downloadButton.oncommand = function(id,event){
+ 
+
+   //在第一个线程里进入第一个空间页面
+    thread.invoke( 
+           function(winform){
+    		        		
+        		
+                import console;   
+                //使用data2的数据就不会出现死机
+                //使用data数据，因为廖雪峰，bilibili等限制频率，会导致崩溃                   
+                datas = string.load("~\data.txt");
+                //console.log(datas);
+                testArr = string.split(datas,"<$>");
+                
+               
+                      winform.firstPage = true;
+                    
+                    
+                     //sleep(15000)
+                   // sleep(3000)
+                 
+                     vals ="s"
+                     thread.invoke( 
+                    	function(winform,testArr){
+                    		
+                    		import console;
+                    		//console.log(vals);
+                    		
+                    		for(key,val in testArr){
+                   
+                             console.log(val)
+                             winform.now = 0;
+                    		 status = winform.loadUrl(val);
+                    		                     	
+                    		 sleep(1000)
+                    		}
+                    		
+                    		winform.msgbox("hihi");
+                    	},winform,testArr);
+                   
+                      
+                  
+                  
+                  
+                 
+                       
+                
+             
+         },winform);
+//后台线程1
+   
+ 
+}
+
+winform.webHost.oncommand = function(id,event){
+	
+}
+
+winform.show() 
+win.loopMessage();
