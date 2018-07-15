@@ -41,7 +41,8 @@ public class JB51 {
 	    int delayNum = 0;
 	    
 	    int errornum = 0;
-	    for(int i=1091;i<140000;i++) {
+	    int breakIn = 2304;
+	    for(int i=breakIn;i<140000;i++) {
 	    	
 	    try {
 	    	HtmlPage page = webclient.getPage("https://www.jb51.net/article/"+i+".htm");  
@@ -66,7 +67,7 @@ public class JB51 {
 		    }
 		    
 		    //每50个更换ip一次，
-		    if(i%100==0||delayNum>10||address.contains("192.168.2")||(now-pre)>20000) {		    
+		    if((i-breakIn)>100||delayNum>10||address.contains("192.168.2")||(now-pre)>20000) {		    
 		    	
 		    	 
 		    	 robot.keyPress(KeyEvent.VK_F6);
@@ -83,6 +84,8 @@ public class JB51 {
 	
 		    	 
 		    	 delayNum = 0;
+		    	 
+		    	 breakIn = i;
 		    	
 		    }
 		    
