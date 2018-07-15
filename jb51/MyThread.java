@@ -1,20 +1,28 @@
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.MalformedURLException;
 import java.util.List;
 
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.DomElement;
+import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class MyThread extends Thread {
    
 	HtmlPage htmlpage;
+	
 	int id;
 	
-	public MyThread(HtmlPage page,int i) {
+	public MyThread(HtmlPage page,int i) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
 		
 		htmlpage = page;
 		id = i;
+		
 	}
 	
 	public static void contentToTxt(String filepath,String content){
@@ -38,19 +46,19 @@ public class MyThread extends Thread {
 	@Override
 	public void run() {
 		
-		List<HtmlElement> keywordList=(List<HtmlElement>) htmlpage.getByXPath("//meta[@name='keywords']");
-	    String keywords = keywordList.get(0).getAttribute("content");
-	    List<HtmlElement> descList=(List<HtmlElement>) htmlpage.getByXPath("//meta[@name='description']");
-	    String description = descList.get(0).getAttribute("content");
+		List<Object> keywordList=(List<Object>) htmlpage.getByXPath("//meta[@name='keywords']");
+	    String keywords = ((DomElement) keywordList.get(0)).getAttribute("content");
+	    List<Object> descList=(List<Object>) htmlpage.getByXPath("//meta[@name='description']");
+	    String description = ((DomElement) descList.get(0)).getAttribute("content");
 	    
-	    List<HtmlElement> titleList = (List<HtmlElement>) htmlpage.getByXPath("//div[@class='title']/h1");//$(".title h1").text();
-	    String title = titleList.get(0).asText();
+	    List<Object> titleList = (List<Object>) htmlpage.getByXPath("//div[@class='title']/h1");//$(".title h1").text();
+	    String title = ((DomNode) titleList.get(0)).asText();
 	    
 	    HtmlElement he = (HtmlElement) htmlpage.getElementById("content");
-	    List<HtmlElement> jb51ewmList = (List<HtmlElement>) he.getByXPath("//div[@class='jb51ewm']");//$(".title h1").text();
+	    List<Object> jb51ewmList = (List<Object>) he.getByXPath("//div[@class='jb51ewm']");//$(".title h1").text();
 	    if(jb51ewmList!=null&&jb51ewmList.size()>0) {
 	    	
-	    	jb51ewmList.get(0).remove();
+	    	((DomNode) jb51ewmList.get(0)).remove();
 	    }
        
        
